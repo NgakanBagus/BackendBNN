@@ -4,65 +4,53 @@ const db = require('../db/system');
 
 // Mendapatkan semua pengumuman
 router.get('/', (req, res) => {
-  db.all('SELECT * FROM pengumuman', [], (err, rows) => {
-    if (err) {
-      console.error(err.message);
-      res.status(500).json({ error: err.message });
-      return;
-    }
+  try {
+    const rows = db.prepare('SELECT * FROM pengumuman').all();
     res.json(rows);
-  });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // Mendapatkan pengumuman berdasarkan ID
 router.get('/:id', (req, res) => {
   const id = req.params.id;
-  db.get('SELECT * FROM pengumuman WHERE id_pengumuman = ?', [id], (err, row) => {
-    if (err) {
-      console.error(err.message);
-      res.status(500).json({ error: err.message });
-      return;
-    }
+  try {
+    const row = db.prepare('SELECT * FROM pengumuman WHERE id_pengumuman = ?').get(id);
     res.json(row);
-  });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // Menambahkan pengumuman baru
 router.post('/', (req, res) => {
-  console.log("Menerima POST request ke /api/pengumuman");
   const { tanggal_pengumuman, deskripsi_pengumuman } = req.body;
   if (!tanggal_pengumuman || !deskripsi_pengumuman) {
     res.status(400).json({ error: "Tanggal dan Deskripsi Pengumuman wajib diisi." });
     return;
   }
 
-  db.run(
-    'INSERT INTO pengumuman (tanggal_pengumuman, deskripsi_pengumuman) VALUES (?, ?)',
-    [tanggal_pengumuman, deskripsi_pengumuman],
-    function (err) {
-      if (err) {
-        console.error(err.message);
-        res.status(500).json({ error: err.message });
-        return;
-      }
-      // Return the ID of the newly inserted row
-      res.status(201).json({ id: this.lastID });
-    }
-  );
+  try {
+    const result = db.prepare(
+      'INSERT INTO pengumuman (tanggal_pengumuman, deskripsi_pengumuman) VALUES (?, ?)'
+    ).run(tanggal_pengumuman, deskripsi_pengumuman);
+    
+    res.status(201).json({ id: result.lastInsertRowid });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
-
 
 // Menghapus pengumuman
 router.delete('/:id', (req, res) => {
   const id = req.params.id;
-  db.run('DELETE FROM pengumuman WHERE id_pengumuman = ?', [id], function (err) {
-    if (err) {
-      console.error(err.message);
-      res.status(500).json({ error: err.message });
-      return;
-    }
-    res.json({ deleted: this.changes });
-  });
+  try {
+    const result = db.prepare('DELETE FROM pengumuman WHERE id_pengumuman = ?').run(id);
+    res.json({ deleted: result.changes });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 module.exports = router;
