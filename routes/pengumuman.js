@@ -1,55 +1,100 @@
 const express = require('express');
 const router = express.Router();
-const db = require('../db/system');
+const { createClient } = require('@supabase/supabase-js');
+
+// Supabase configuration
+const SUPABASE_URL = 'https://nbcnhzkctgrnojhhbvqo.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5iY25oemtjdGdybm9qaGhidnFvIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTcyNjAyMjE1MCwiZXhwIjoyMDQxNTk4MTUwfQ.l17K7F3hOq8dnZGSOFNVHnRc95uZEyMoNS8mH8HOxB8';
+const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // Mendapatkan semua pengumuman
-router.get('/', (req, res) => {
+router.get('/', async (req, res) => {
   try {
-    const rows = db.prepare('SELECT * FROM pengumuman').all();
-    res.json(rows);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
+    const { data, error } = await supabase
+      .from('pengumuman') // Assuming the table is named 'pengumuman'
+      .select('*');
+    
+    if (error) throw error;
+
+    res.json(data);
+  } catch (error) {
+    console.error('Error fetching data:', error.message);
+    res.status(500).json({ error: error.message });
   }
 });
 
 // Mendapatkan pengumuman berdasarkan ID
-router.get('/:id', (req, res) => {
+router.get('/:id', async (req, res) => {
   const id = req.params.id;
+
+  if (!id) {
+    return res.status(400).json({ error: "ID Pengumuman is required." });
+  }
+  
   try {
-    const row = db.prepare('SELECT * FROM pengumuman WHERE id_pengumuman = ?').get(id);
-    res.json(row);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
+    const { data, error } = await supabase
+      .from('pengumuman')
+      .select('*')
+      .eq('id_pengumuman', id)
+      .single();  // Use single to fetch one record
+    
+    if (error) throw error;
+
+    res.json(data);
+  } catch (error) {
+    console.error('Error fetching pengumuman by ID:', error.message);
+    res.status(500).json({ error: error.message });
   }
 });
 
 // Menambahkan pengumuman baru
-router.post('/', (req, res) => {
+router.post('/', async (req, res) => {
+  console.log("Menerima POST request ke /api/pengumuman", req.body);
   const { tanggal_pengumuman, deskripsi_pengumuman } = req.body;
+
+  // Validate the incoming data
   if (!tanggal_pengumuman || !deskripsi_pengumuman) {
-    res.status(400).json({ error: "Tanggal dan Deskripsi Pengumuman wajib diisi." });
-    return;
+    return res.status(400).json({ error: "Tanggal dan Deskripsi Pengumuman wajib diisi." });
   }
 
   try {
-    const result = db.prepare(
-      'INSERT INTO pengumuman (tanggal_pengumuman, deskripsi_pengumuman) VALUES (?, ?)'
-    ).run(tanggal_pengumuman, deskripsi_pengumuman);
+    const { data, error } = await supabase
+      .from('pengumuman')
+      .insert([{ tanggal_pengumuman, deskripsi_pengumuman }])
+      .select('id_pengumuman'); // Ensure you return the ID from the insertion
     
-    res.status(201).json({ id: result.lastInsertRowid });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
+    if (error) throw error;
+
+    console.log("Inserted data:", data);
+
+    // Check if data exists
+    if (data && data.length > 0) {
+      res.status(201).json({ id: data[0].id_pengumuman });
+    } else {
+      throw new Error('Failed to insert data');
+    }
+  } catch (error) {
+    console.error('Error inserting data:', error.message);
+    res.status(500).json({ error: error.message });
   }
 });
 
-// Menghapus pengumuman
-router.delete('/:id', (req, res) => {
-  const id = req.params.id;
-  try {
-    const result = db.prepare('DELETE FROM pengumuman WHERE id_pengumuman = ?').run(id);
-    res.json({ deleted: result.changes });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
+// Menghapus jadwal
+router.delete('/:id_pengumuman', async (req, res) => {
+  const { id_pengumuman } = req.params;
+  
+  const { data, error } = await supabase
+    .from('pengumuman')
+    .delete()
+    .eq('id_pengumuman', id_pengumuman)
+    .select(); // Pastikan kita mendapatkan data yang dihapus
+  
+  if (error) {
+    res.status(400).json({ error: error.message });
+  } else if (!data || data.length === 0) {
+    res.status(404).json({ error: 'Pengumuman not found' });
+  } else {
+    res.json({ message: 'Pengumuman deleted', data });
   }
 });
 

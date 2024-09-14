@@ -1,80 +1,72 @@
-const sqlite3 = require('better-sqlite3');
+const { createClient } = require('@supabase/supabase-js');
+
+// Supabase credentials
+const supabaseUrl = 'https://nbcnhzkctgrnojhhbvqo.supabase.co'; // replace with your actual URL
+const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5iY25oemtjdGdybm9qaGhidnFvIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTcyNjAyMjE1MCwiZXhwIjoyMDQxNTk4MTUwfQ.l17K7F3hOq8dnZGSOFNVHnRc95uZEyMoNS8mH8HOxB8'; // replace with your actual public key
+const supabase = createClient(supabaseUrl, supabaseKey);
+
 const bcrypt = require('bcryptjs');
 
-// Database setup
-const db = new sqlite3('./db/system.db');
+// Insert initial admin and user into Supabase
+async function insertInitialData() {
+    const initialAdmins = [{ username: 'admin1', password: 'admin1234' }];
+    const initialUsers = [{ username: 'user1', password: 'user1234' }];
 
-// Create tables
-db.exec(`
-  CREATE TABLE IF NOT EXISTS jadwal (
-    id_jadwal INTEGER PRIMARY KEY AUTOINCREMENT,
-    nama_kegiatan VARCHAR(50) NOT NULL,
-    tanggal_mulai DATE NOT NULL,
-    tanggal_selesai DATE NOT NULL,
-    jam_mulai TIME NOT NULL,
-    jam_selesai TIME NOT NULL
-  )
-`);
+    // Insert Admins
+    for (const admin of initialAdmins) {
+        const { data, error } = await supabase
+            .from('admins')
+            .select('*')
+            .eq('username', admin.username)
+            .limit(1) // Limit to avoid multiple rows
+            .single(); // Expect a single row
 
-db.exec(`
-  CREATE TABLE IF NOT EXISTS laporan (
-    id_laporan INTEGER PRIMARY KEY AUTOINCREMENT,
-    id_jadwal INTEGER NOT NULL,
-    tanggal_laporan DATE NOT NULL,
-    FOREIGN KEY (id_jadwal) REFERENCES jadwal(id_jadwal)
-  )
-`);
+        if (!data && error?.code === 'PGRST116') {
+            // 'PGRST116' is the code for "No rows found"
+            const hashedPassword = await bcrypt.hash(admin.password, 10);
+            const { error: insertError } = await supabase
+                .from('admins')
+                .insert([{ username: admin.username, password: hashedPassword }]);
 
-db.exec(`
-  CREATE TABLE IF NOT EXISTS pengumuman (
-    id_pengumuman INTEGER PRIMARY KEY AUTOINCREMENT,
-    tanggal_pengumuman DATE NOT NULL,
-    deskripsi_pengumuman VARCHAR(500) NOT NULL
-  )
-`);
+            if (insertError) {
+                console.error(`Error inserting admin ${admin.username}:`, insertError.message);
+            } else {
+                console.log(`Admin ${admin.username} added to the database.`);
+            }
+        } else if (data) {
+            console.log(`Admin ${admin.username} already exists.`);
+        } else {
+            console.error(`Error querying admin ${admin.username}:`, error.message);
+        }
+    }
 
-db.exec(`
-  CREATE TABLE IF NOT EXISTS user (
-    id_user INTEGER PRIMARY KEY AUTOINCREMENT,
-    username TEXT NOT NULL UNIQUE,
-    password TEXT NOT NULL
-  )
-`);
+    // Insert Users
+    for (const user of initialUsers) {
+        const { data, error } = await supabase
+            .from('users')
+            .select('*')
+            .eq('username', user.username)
+            .limit(1) // Limit to avoid multiple rows
+            .single(); // Expect a single row
 
-db.exec(`
-  CREATE TABLE IF NOT EXISTS admin (
-    id_admin INTEGER PRIMARY KEY AUTOINCREMENT,
-    username TEXT NOT NULL UNIQUE,
-    password TEXT NOT NULL
-  )
-`);
+        if (!data && error?.code === 'PGRST116') {
+            const hashedPassword = await bcrypt.hash(user.password, 10);
+            const { error: insertError } = await supabase
+                .from('users')
+                .insert([{ username: user.username, password: hashedPassword }]);
 
-// Insert initial admin and user
-const initialAdmins = [{ username: 'admin1', password: 'admin1234' }];
-const initialUsers = [{ username: 'user1', password: 'user1234' }];
-
-// Function to insert an admin only if it doesn't already exist
-for (const admin of initialAdmins) {
-  const row = db.prepare(`SELECT * FROM admin WHERE username = ?`).get(admin.username);
-  if (!row) {
-    const hashedPassword = bcrypt.hashSync(admin.password, 10);
-    db.prepare(`INSERT INTO admin (username, password) VALUES (?, ?)`).run(admin.username, hashedPassword);
-    console.log(`Admin ${admin.username} added to the database.`);
-  } else {
-    console.log(`Admin ${admin.username} already exists.`);
-  }
+            if (insertError) {
+                console.error(`Error inserting user ${user.username}:`, insertError.message);
+            } else {
+                console.log(`User ${user.username} added to the database.`);
+            }
+        } else if (data) {
+            console.log(`User ${user.username} already exists.`);
+        } else {
+            console.error(`Error querying user ${user.username}:`, error.message);
+        }
+    }
 }
 
-// Function to insert a user only if it doesn't already exist
-for (const user of initialUsers) {
-  const row = db.prepare(`SELECT * FROM user WHERE username = ?`).get(user.username);
-  if (!row) {
-    const hashedPassword = bcrypt.hashSync(user.password, 10);
-    db.prepare(`INSERT INTO user (username, password) VALUES (?, ?)`).run(user.username, hashedPassword);
-    console.log(`User ${user.username} added to the database.`);
-  } else {
-    console.log(`User ${user.username} already exists.`);
-  }
-}
-
-module.exports = db;
+// Call the function to insert data
+insertInitialData();
