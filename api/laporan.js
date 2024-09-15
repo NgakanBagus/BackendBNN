@@ -136,7 +136,6 @@ router.get('/download/pdf', async (req, res) => {
     }
 });
 
-// Route to download CSV
 router.get('/download/csv', async (req, res) => {
     const { month } = req.query;
 
@@ -147,9 +146,13 @@ router.get('/download/csv', async (req, res) => {
             return res.status(404).json({ error: 'No data found for the selected month.' });
         }
 
+        // Set response headers for CSV download
         const fileName = `laporan_kegiatan_${month}.csv`;
-        const csvWriter = createCsvWriter({
-            path: fileName,
+        res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
+        res.setHeader('Content-Type', 'text/csv');
+
+        // Stream the CSV content directly to the response
+        const csvWriter = createObjectCsvStringifier({
             header: [
                 { id: 'nama_kegiatan', title: 'Nama Kegiatan' },
                 { id: 'tanggal_mulai', title: 'Tanggal Mulai' },
@@ -159,14 +162,12 @@ router.get('/download/csv', async (req, res) => {
             ]
         });
 
-        await csvWriter.writeRecords(rows);
+        const csvHeader = csvWriter.getHeaderString();
+        const csvContent = csvWriter.stringifyRecords(rows);
 
-        res.download(fileName, (err) => {
-            if (err) {
-                console.error('Error downloading CSV:', err.message);
-                res.status(500).json({ error: 'Failed to download CSV file.' });
-            }
-        });
+        // Send the CSV content
+        res.write(csvHeader + csvContent);
+        res.end();
 
     } catch (error) {
         console.error('Error generating CSV:', error.message);
