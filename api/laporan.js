@@ -140,14 +140,18 @@ router.get('/download/pdf', async (req, res) => {
 router.get('/download/csv', async (req, res) => {
     const { month } = req.query;
 
+    if (!month) {
+        return res.status(400).json({ error: 'Month parameter is required.' });
+    }
+
     try {
         const rows = await getJadwalByMonth(month);
 
-        if (rows.length === 0) {
+        if (!rows || rows.length === 0) {
             return res.status(404).json({ error: 'No data found for the selected month.' });
         }
 
-        const fileName = `laporan_kegiatan_${month}.csv`;
+        const fileName = path.join(__dirname, `laporan_kegiatan_${month}.csv`);
         const csvWriter = createCsvWriter({
             path: fileName,
             header: [
@@ -156,21 +160,21 @@ router.get('/download/csv', async (req, res) => {
                 { id: 'tanggal_selesai', title: 'Tanggal Selesai' },
                 { id: 'jam_mulai', title: 'Jam Mulai' },
                 { id: 'jam_selesai', title: 'Jam Selesai' },
-            ]
+            ],
         });
 
         await csvWriter.writeRecords(rows);
 
+        // Send the CSV file for download
         res.download(fileName, (err) => {
             if (err) {
-                console.error('Error downloading CSV:', err.message);
-                res.status(500).json({ error: 'Failed to download CSV file.' });
+                console.error('Error sending CSV:', err.message);
+                res.status(500).json({ error: 'Failed to download CSV.' });
             }
         });
-
     } catch (error) {
         console.error('Error generating CSV:', error.message);
-        res.status(500).json({ error: 'Failed to generate CSV file.' });
+        res.status(500).json({ error: `Internal server error: ${error.message}` });
     }
 });
 
