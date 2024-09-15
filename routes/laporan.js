@@ -136,42 +136,49 @@ router.get('/download/pdf', async (req, res) => {
     }
 });
 
-// Route to download CSV
-router.get('/download/csv', async (req, res) => {
-    const { month } = req.query;
-
-    try {
-        const rows = await getJadwalByMonth(month);
-
-        if (rows.length === 0) {
-            return res.status(404).json({ error: 'No data found for the selected month.' });
-        }
-
-        const fileName = `laporan_kegiatan_${month}.csv`;
-        const csvWriter = createCsvWriter({
-            path: fileName,
-            header: [
-                { id: 'nama_kegiatan', title: 'Nama Kegiatan' },
-                { id: 'tanggal_mulai', title: 'Tanggal Mulai' },
-                { id: 'tanggal_selesai', title: 'Tanggal Selesai' },
-                { id: 'jam_mulai', title: 'Jam Mulai' },
-                { id: 'jam_selesai', title: 'Jam Selesai' },
-            ]
-        });
-
-        await csvWriter.writeRecords(rows);
-
-        res.download(fileName, (err) => {
+    const { createObjectCsvStringifier } = require('csv-writer');
+    // Rute untuk mengunduh laporan sebagai CSV
+    router.get('/download/csv', (req, res) => {
+        const { month } = req.query;
+    
+        db.all('SELECT * FROM jadwal WHERE strftime("%Y-%m", tanggal_mulai) = ?', [month], (err, rows) => {
             if (err) {
-                console.error('Error downloading CSV:', err.message);
-                res.status(500).json({ error: 'Failed to download CSV file.' });
+                console.error(err.message);
+                res.status(500).json({ error: err.message });
+                return;
             }
+    
+            if (rows.length === 0) {
+                res.status(404).json({ error: 'No data found for the selected month.' });
+                return;
+            }
+    
+            // Definisikan header CSV
+            const csvStringifier = createObjectCsvStringifier({
+                header: [
+                    { id: 'nama_kegiatan', title: 'Nama Kegiatan' },
+                    { id: 'tanggal_mulai', title: 'Tanggal Mulai' },
+                    { id: 'tanggal_selesai', title: 'Tanggal Selesai' },
+                    { id: 'jam_mulai', title: 'Jam Mulai' },
+                    { id: 'jam_selesai', title: 'Jam Selesai' }
+                ]
+            });
+    
+            // Buat konten CSV sebagai string
+            let csvContent = csvStringifier.getHeaderString() + csvStringifier.stringifyRecords(rows);
+    
+            // Menyusun nama file berdasarkan bulan
+            const fileName = `laporan_kegiatan_${month}.csv`;
+    
+            // Set header untuk pengunduhan CSV
+            res.setHeader('Content-disposition', `attachment; filename=${fileName}`);
+            res.setHeader('Content-Type', 'text/csv');
+    
+            // Kirim konten CSV sebagai respons
+            res.status(200).send(csvContent);
         });
+    })
 
-    } catch (error) {
-        console.error('Error generating CSV:', error.message);
-        res.status(500).json({ error: 'Failed to generate CSV file.' });
-    }
-});
+module.exports = router;
 
 module.exports = router;
