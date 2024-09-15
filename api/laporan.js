@@ -136,7 +136,6 @@ router.get('/download/pdf', async (req, res) => {
     }
 });
 
-// Route to download CSV
 router.get('/download/csv', async (req, res) => {
     const { month } = req.query;
 
@@ -151,7 +150,9 @@ router.get('/download/csv', async (req, res) => {
             return res.status(404).json({ error: 'No data found for the selected month.' });
         }
 
-        const fileName = path.join(__dirname, `laporan_kegiatan_${month}.csv`);
+        const fileName = `laporan_kegiatan_${month}.csv`;
+
+        // Use in-memory CSV writing, instead of writing to a file, to avoid I/O issues.
         const csvWriter = createCsvWriter({
             path: fileName,
             header: [
@@ -159,22 +160,30 @@ router.get('/download/csv', async (req, res) => {
                 { id: 'tanggal_mulai', title: 'Tanggal Mulai' },
                 { id: 'tanggal_selesai', title: 'Tanggal Selesai' },
                 { id: 'jam_mulai', title: 'Jam Mulai' },
-                { id: 'jam_selesai', title: 'Jam Selesai' },
-            ],
+                { id: 'jam_selesai', title: 'Jam Selesai' }
+            ]
         });
 
-        await csvWriter.writeRecords(rows);
+        await csvWriter.writeRecords(rows); // Write the data into CSV format
 
-        // Send the CSV file for download
-        res.download(fileName, (err) => {
+        // Set the response headers to prompt download
+        res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
+        res.setHeader('Content-Type', 'text/csv');
+
+        // Stream the CSV file to the response
+        res.sendFile(path.resolve(__dirname, fileName), err => {
             if (err) {
-                console.error('Error sending CSV:', err.message);
-                res.status(500).json({ error: 'Failed to download CSV.' });
+                console.error('Error sending file:', err.message);
+                res.status(500).json({ error: 'Error sending the CSV file.' });
             }
+
+            // Optionally clean up the file from disk after sending it
+            fs.unlinkSync(path.resolve(__dirname, fileName));
         });
+
     } catch (error) {
         console.error('Error generating CSV:', error.message);
-        res.status(500).json({ error: `Internal server error: ${error.message}` });
+        res.status(500).json({ error: 'Failed to generate CSV.' });
     }
 });
 
