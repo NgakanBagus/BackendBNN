@@ -136,47 +136,52 @@ router.get('/download/pdf', async (req, res) => {
     }
 });
 
-router.get('/download/csv', (req, res) => {
+router.get('/download/csv', async (req, res) => {
     const { month } = req.query;
 
-    // Add logging for debugging
-    console.log(`Fetching data for month: ${month}`);
+    try {
+        // Calculate the last day of the given month dynamically
+        const startDate = `${month}-01`;
+        const endDate = dayjs(startDate).endOf('month').format('YYYY-MM-DD'); // This will get the last day of the month
 
-    db.all('SELECT * FROM jadwal WHERE strftime("%Y-%m", tanggal_mulai) = ?', [month], (err, rows) => {
-        if (err) {
-            console.error('Database error:', err.message);
-            return res.status(500).json({ error: 'Database query failed.' });
+        // Supabase query to get data for the given month
+        const { data: rows, error } = await supabase
+            .from('jadwal') // Assuming the table in Supabase is named 'jadwal'
+            .select('*')
+            .gte('tanggal_mulai', startDate)
+            .lte('tanggal_selesai', endDate); // Use dynamic last day of the month
+
+        if (error) {
+            throw new Error(`Supabase query error: ${error.message}`);
         }
 
         if (rows.length === 0) {
-            console.log('No data found for the selected month.');
             return res.status(404).json({ error: 'No data found for the selected month.' });
         }
 
-        try {
-            const csvStringifier = createObjectCsvStringifier({
-                header: [
-                    { id: 'nama_kegiatan', title: 'Nama Kegiatan' },
-                    { id: 'tanggal_mulai', title: 'Tanggal Mulai' },
-                    { id: 'tanggal_selesai', title: 'Tanggal Selesai' },
-                    { id: 'jam_mulai', title: 'Jam Mulai' },
-                    { id: 'jam_selesai', title: 'Jam Selesai' }
-                ]
-            });
-
-            let csvContent = csvStringifier.getHeaderString() + csvStringifier.stringifyRecords(rows);
-            const fileName = `laporan_kegiatan_${month}.csv`;
-
-            res.setHeader('Content-disposition', `attachment; filename=${fileName}`);
-            res.setHeader('Content-Type', 'text/csv');
-
-            console.log('CSV file generated successfully.');
-            return res.status(200).send(csvContent);
-        } catch (csvError) {
-            console.error('CSV generation error:', csvError.message);
-            return res.status(500).json({ error: 'Failed to generate CSV file.' });
-        }
+        const csvStringifier = createObjectCsvStringifier({
+            header: [
+                { id: 'nama_kegiatan', title: 'Nama Kegiatan' },
+                { id: 'tanggal_mulai', title: 'Tanggal Mulai' },
+                { id: 'tanggal_selesai', title: 'Tanggal Selesai' },
+                { id: 'jam_mulai', title: 'Jam Mulai' },
+                { id: 'jam_selesai', title: 'Jam Selesai' }
+            ]
         });
-    })
+
+        let csvContent = csvStringifier.getHeaderString() + csvStringifier.stringifyRecords(rows);
+        const fileName = `laporan_kegiatan_${month}.csv`;
+
+        res.setHeader('Content-disposition', `attachment; filename=${fileName}`);
+        res.setHeader('Content-Type', 'text/csv');
+
+        console.log('CSV file generated successfully.');
+        return res.status(200).send(csvContent);
+
+    } catch (error) {
+        console.error('CSV generation error:', error.message);
+        return res.status(500).json({ error: 'Failed to generate CSV file.' });
+    }
+});
 
 module.exports = router;
