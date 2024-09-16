@@ -136,24 +136,24 @@ router.get('/download/pdf', async (req, res) => {
     }
 });
 
-    const { createObjectCsvStringifier } = require('csv-writer');
-    // Rute untuk mengunduh laporan sebagai CSV
-    router.get('/download/csv', (req, res) => {
-        const { month } = req.query;
-    
-        db.all('SELECT * FROM jadwal WHERE strftime("%Y-%m", tanggal_mulai) = ?', [month], (err, rows) => {
-            if (err) {
-                console.error(err.message);
-                res.status(500).json({ error: err.message });
-                return;
-            }
-    
-            if (rows.length === 0) {
-                res.status(404).json({ error: 'No data found for the selected month.' });
-                return;
-            }
-    
-            // Definisikan header CSV
+router.get('/download/csv', (req, res) => {
+    const { month } = req.query;
+
+    // Add logging for debugging
+    console.log(`Fetching data for month: ${month}`);
+
+    db.all('SELECT * FROM jadwal WHERE strftime("%Y-%m", tanggal_mulai) = ?', [month], (err, rows) => {
+        if (err) {
+            console.error('Database error:', err.message);
+            return res.status(500).json({ error: 'Database query failed.' });
+        }
+
+        if (rows.length === 0) {
+            console.log('No data found for the selected month.');
+            return res.status(404).json({ error: 'No data found for the selected month.' });
+        }
+
+        try {
             const csvStringifier = createObjectCsvStringifier({
                 header: [
                     { id: 'nama_kegiatan', title: 'Nama Kegiatan' },
@@ -163,19 +163,19 @@ router.get('/download/pdf', async (req, res) => {
                     { id: 'jam_selesai', title: 'Jam Selesai' }
                 ]
             });
-    
-            // Buat konten CSV sebagai string
+
             let csvContent = csvStringifier.getHeaderString() + csvStringifier.stringifyRecords(rows);
-    
-            // Menyusun nama file berdasarkan bulan
             const fileName = `laporan_kegiatan_${month}.csv`;
-    
-            // Set header untuk pengunduhan CSV
+
             res.setHeader('Content-disposition', `attachment; filename=${fileName}`);
             res.setHeader('Content-Type', 'text/csv');
-    
-            // Kirim konten CSV sebagai respons
-            res.status(200).send(csvContent);
+
+            console.log('CSV file generated successfully.');
+            return res.status(200).send(csvContent);
+        } catch (csvError) {
+            console.error('CSV generation error:', csvError.message);
+            return res.status(500).json({ error: 'Failed to generate CSV file.' });
+        }
         });
     })
 
