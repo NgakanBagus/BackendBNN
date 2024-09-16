@@ -140,26 +140,16 @@ router.get('/download/csv', async (req, res) => {
     const { month } = req.query;
 
     try {
-        // Calculate the last day of the given month dynamically
-        const startDate = `${month}-01`;
-        const endDate = dayjs(startDate).endOf('month').format('YYYY-MM-DD'); // This will get the last day of the month
-
-        // Supabase query to get data for the given month
-        const { data: rows, error } = await supabase
-            .from('jadwal') // Assuming the table in Supabase is named 'jadwal'
-            .select('*')
-            .gte('tanggal_mulai', startDate)
-            .lte('tanggal_selesai', endDate); // Use dynamic last day of the month
-
-        if (error) {
-            throw new Error(`Supabase query error: ${error.message}`);
-        }
+        // Fetch data from Supabase
+        const rows = await getJadwalByMonth(month);
 
         if (rows.length === 0) {
             return res.status(404).json({ error: 'No data found for the selected month.' });
         }
 
-        const csvStringifier = createObjectCsvStringifier({
+        const csvFilePath = path.join(__dirname, `laporan_kegiatan_${month}.csv`);
+        const csvWriter = createCsvWriter({
+            path: csvFilePath,
             header: [
                 { id: 'nama_kegiatan', title: 'Nama Kegiatan' },
                 { id: 'tanggal_mulai', title: 'Tanggal Mulai' },
@@ -169,14 +159,19 @@ router.get('/download/csv', async (req, res) => {
             ]
         });
 
-        let csvContent = csvStringifier.getHeaderString() + csvStringifier.stringifyRecords(rows);
-        const fileName = `laporan_kegiatan_${month}.csv`;
+        // Write records to CSV
+        await csvWriter.writeRecords(rows);
 
-        res.setHeader('Content-disposition', `attachment; filename=${fileName}`);
+        // Send the file as a response
+        res.setHeader('Content-disposition', `attachment; filename=laporan_kegiatan_${month}.csv`);
         res.setHeader('Content-Type', 'text/csv');
-
-        console.log('CSV file generated successfully.');
-        return res.status(200).send(csvContent);
+        res.download(csvFilePath, (err) => {
+            if (err) {
+                console.error('File download error:', err);
+            }
+            // Delete the file after sending it
+            fs.unlinkSync(csvFilePath);
+        });
 
     } catch (error) {
         console.error('CSV generation error:', error.message);
