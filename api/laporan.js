@@ -147,40 +147,20 @@ router.get('/download/csv', async (req, res) => {
             return res.status(404).json({ error: 'No data found for the selected month.' });
         }
 
-        // Define CSV headers
-        const csvWriter = createCsvWriter({
-            header: [
-                { id: 'nama_kegiatan', title: 'Nama Kegiatan' },
-                { id: 'tanggal_mulai', title: 'Tanggal Mulai' },
-                { id: 'tanggal_selesai', title: 'Tanggal Selesai' },
-                { id: 'jam_mulai', title: 'Jam Mulai' },
-                { id: 'jam_selesai', title: 'Jam Selesai' }
-            ],
-            writeRecords: async (data) => {
-                // Convert data into CSV format
-                const csvRows = [
-                    ['Nama Kegiatan', 'Tanggal Mulai', 'Tanggal Selesai', 'Jam Mulai', 'Jam Selesai'], // Header row
-                    ...data.map(row => [
-                        row.nama_kegiatan,
-                        row.tanggal_mulai,
-                        row.tanggal_selesai,
-                        row.jam_mulai,
-                        row.jam_selesai
-                    ])
-                ];
-                return csvRows;
-            }
+        // Manually build CSV content in-memory
+        let csvContent = 'Nama Kegiatan,Tanggal Mulai,Tanggal Selesai,Jam Mulai,Jam Selesai\n'; // CSV header
+
+        rows.forEach(row => {
+            csvContent += `${row.nama_kegiatan},${row.tanggal_mulai},${row.tanggal_selesai},${row.jam_mulai},${row.jam_selesai}\n`;
         });
 
-        // Set the response headers for CSV download
+        // Set response headers for CSV download
         const fileName = `laporan_kegiatan_${month}.csv`;
         res.setHeader('Content-disposition', `attachment; filename=${fileName}`);
         res.setHeader('Content-Type', 'text/csv');
 
-        // Write CSV data directly to the response stream
-        const csvStream = createCsvWriter().writeRecords(rows);
-        csvStream.pipe(res);
-
+        // Send the CSV content as response
+        res.send(csvContent);
     } catch (error) {
         console.error('CSV generation error:', error.message);
         return res.status(500).json({ error: 'Failed to generate CSV file.' });
