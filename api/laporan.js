@@ -52,7 +52,7 @@ router.get('/download/pdf', async (req, res) => {
 
         // Error handling for image loading
         try {
-            doc.image('public/Images/logo_url.png', 50, 45, { width: 50 });
+            doc.image('../public/logo_url.png', 50, 45, { width: 50 });
         } catch (err) {
             console.warn("Logo image not found, skipping image insertion.");
         }
