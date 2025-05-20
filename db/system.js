@@ -1,7 +1,7 @@
 const { createClient } = require('@supabase/supabase-js');
 
 const supabaseUrl = 'https://okkqbnojvrlckxkqvglk.supabase.co'; 
-const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9ra3Fibm9qdnJsY2t4a3F2Z2xrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc3MTI4NjIsImV4cCI6MjA2MzI4ODg2Mn0.KVDPYqROU7xgM8tNYckyxuq_8xj5clPkLuh12DXM4Bw';
+const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9ra3Fibm9qdnJsY2t4a3F2Z2xrIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0NzcxMjg2MiwiZXhwIjoyMDYzMjg4ODYyfQ.aFClYNB48sdDekmlZ8QCW1mS2IUxQj0NeR9i2R3Ftfk';
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 const bcrypt = require('bcryptjs');
