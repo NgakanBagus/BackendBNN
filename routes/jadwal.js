@@ -6,7 +6,6 @@ const SUPABASE_URL = 'https://nbcnhzkctgrnojhhbvqo.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5iY25oemtjdGdybm9qaGhidnFvIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTcyNjAyMjE1MCwiZXhwIjoyMDQxNTk4MTUwfQ.l17K7F3hOq8dnZGSOFNVHnRc95uZEyMoNS8mH8HOxB8';
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// Mendapatkan semua jadwal
 router.get('/', async (req, res) => {
   const { data, error } = await supabase.from('jadwal').select('*');
   
@@ -17,7 +16,6 @@ router.get('/', async (req, res) => {
   }
 });
 
-// Mendapatkan jadwal berdasarkan ID
 router.get('/:id_jadwal', async (req, res) => {
   const { id_jadwal } = req.params;
   
@@ -36,7 +34,6 @@ router.get('/:id_jadwal', async (req, res) => {
   }
 });
 
-// Menambahkan jadwal baru
 router.post('/', async (req, res) => {
   const { nama_kegiatan, tanggal_mulai, tanggal_selesai, jam_mulai, jam_selesai } = req.body;
   
@@ -51,7 +48,6 @@ router.post('/', async (req, res) => {
   }
 });
 
-// Menghapus jadwal
 router.delete('/:id_jadwal', async (req, res) => {
   const { id_jadwal } = req.params;
   
@@ -59,7 +55,7 @@ router.delete('/:id_jadwal', async (req, res) => {
     .from('jadwal')
     .delete()
     .eq('id_jadwal', id_jadwal)
-    .select(); // Pastikan kita mendapatkan data yang dihapus
+    .select();
   
   if (error) {
     res.status(400).json({ error: error.message });
@@ -70,7 +66,6 @@ router.delete('/:id_jadwal', async (req, res) => {
   }
 });
 
-// Mengedit jadwal
 router.put('/:id_jadwal', async (req, res) => {
   const { id_jadwal } = req.params;
   const { nama_kegiatan, tanggal_mulai, tanggal_selesai, jam_mulai, jam_selesai } = req.body;
@@ -79,7 +74,7 @@ router.put('/:id_jadwal', async (req, res) => {
     .from('jadwal')
     .update({ nama_kegiatan, tanggal_mulai, tanggal_selesai, jam_mulai, jam_selesai })
     .eq('id_jadwal', id_jadwal)
-    .select(); // Pastikan kita mendapatkan data yang diupdate
+    .select(); 
   
   if (error) {
     res.status(400).json({ error: error.message });

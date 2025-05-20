@@ -13,15 +13,13 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 async function getJadwalByMonth(month) {
     try {
-        // Calculate the last day of the given month dynamically
         const startDate = `${month}-01`;
-        const endDate = dayjs(startDate).endOf('month').format('YYYY-MM-DD'); // This will get the last day of the month
-
+        const endDate = dayjs(startDate).endOf('month').format('YYYY-MM-DD'); 
         const { data, error } = await supabase
-            .from('jadwal') // Assuming the table in Supabase is named 'jadwal'
+            .from('jadwal') 
             .select('*')
             .gte('tanggal_mulai', startDate)
-            .lte('tanggal_selesai', endDate); // Use dynamic last day of the month
+            .lte('tanggal_selesai', endDate); 
 
         if (error) {
             throw new Error(`Supabase query error: ${error.message}`);
@@ -50,7 +48,6 @@ router.get('/download/pdf', async (req, res) => {
         res.setHeader('Content-type', 'application/pdf');
         doc.pipe(res);
 
-        // Error handling for image loading
         try {
             doc.image(path.join(__dirname, '../public/logo_url.png'), 50, 45, { width: 50 });
         } catch (err) {
@@ -68,64 +65,53 @@ router.get('/download/pdf', async (req, res) => {
         doc.fontSize(12).text(`Dicetak pada : ${dayjs().format('ddd, DD/MM/YYYY')}`, { align: 'right' });
         doc.moveDown(4);
 
-         // Lebar dan posisi kolom yang diatur lebih detail
-          // Lebar dan posisi kolom yang diatur lebih detail
         const tableHeaderY = 180;
 
-        doc.moveTo(50, tableHeaderY - 10).lineTo(580, tableHeaderY - 10).stroke(); // Adjusted right border for header
+        doc.moveTo(50, tableHeaderY - 10).lineTo(580, tableHeaderY - 10).stroke(); 
 
-        // Header content
         doc.fontSize(10).text('NO', 60, tableHeaderY, { continued: true })
             .text('Kegiatan', 120, tableHeaderY, { continued: true })
             .text('Jam', 300, tableHeaderY, { continued: true })
-            .text('Tanggal Mulai & Selesai', 400, tableHeaderY); // Adjust column positioning
+            .text('Tanggal Mulai & Selesai', 400, tableHeaderY);
         
-        // Vertical borders for header
-        doc.moveTo(50, tableHeaderY - 10).lineTo(50, tableHeaderY + 10).stroke();   // Left border
-        doc.moveTo(120, tableHeaderY - 10).lineTo(120, tableHeaderY + 10).stroke(); // After NO
-        doc.moveTo(300, tableHeaderY - 10).lineTo(300, tableHeaderY + 10).stroke(); // After Kegiatan
-        doc.moveTo(400, tableHeaderY - 10).lineTo(400, tableHeaderY + 10).stroke(); // After Jam
-        doc.moveTo(580, tableHeaderY - 10).lineTo(580, tableHeaderY + 20).stroke(); // Right border
+        doc.moveTo(50, tableHeaderY - 10).lineTo(50, tableHeaderY + 10).stroke();   
+        doc.moveTo(120, tableHeaderY - 10).lineTo(120, tableHeaderY + 10).stroke(); 
+        doc.moveTo(300, tableHeaderY - 10).lineTo(300, tableHeaderY + 10).stroke(); 
+        doc.moveTo(400, tableHeaderY - 10).lineTo(400, tableHeaderY + 10).stroke(); 
+        doc.moveTo(580, tableHeaderY - 10).lineTo(580, tableHeaderY + 20).stroke(); 
 
-        // Header border bottom
-        doc.moveTo(50, tableHeaderY + 10).lineTo(580, tableHeaderY + 10).stroke(); // Extended horizontal line
+        doc.moveTo(50, tableHeaderY + 10).lineTo(580, tableHeaderY + 10).stroke(); 
 
-        // Loop untuk menampilkan isi tabel dan membuat garis vertikal
         rows.forEach((row, index) => {
-            const startY = tableHeaderY + 20 + (index * 20);  // Keep consistent row height
-        
-            // Set column widths for each section
+            const startY = tableHeaderY + 20 + (index * 20);  
             const kegiatanColWidth = 160;   
             const jamColWidth = 87;   
             const tanggalColWidth = 180;    
         
-            // Add text for each cell, with width and word-wrap
-            doc.text(`${index + 1}`, 65, startY, { width: 30, align: 'center' })  // NO column
+            doc.text(`${index + 1}`, 65, startY, { width: 30, align: 'center' })  
                 .text(row.nama_kegiatan, 130, startY, {
-                    width: kegiatanColWidth,   // Set column width for text wrapping
+                    width: kegiatanColWidth,   
                     align: 'left',
-                    ellipsis: true   // Add ellipsis if text overflows
+                    ellipsis: true   
                 })
                 .text(`${row.jam_mulai} - ${row.jam_selesai}`, 310, startY, {
                     width: jamColWidth,
-                    align: 'center',  // Ensure time values are centered
-                    lineBreak: false  // Prevent automatic line breaks
+                    align: 'center',  
+                    lineBreak: false  
                 })
                 .text(`${row.tanggal_mulai} - ${row.tanggal_selesai}`, 410, startY, {
                     width: tanggalColWidth,
                     align: 'center',
-                    lineBreak: false   // Ensure the date stays on the same line
+                    lineBreak: false   
                 });
         
-            // Draw vertical borders for the table
-            doc.moveTo(50, startY - 10).lineTo(50, startY + 10).stroke();   // Left border
-            doc.moveTo(120, startY - 10).lineTo(120, startY + 10).stroke(); // Border after NO
-            doc.moveTo(300, startY - 10).lineTo(300, startY + 10).stroke(); // Border after Kegiatan
-            doc.moveTo(400, startY - 10).lineTo(400, startY + 10).stroke(); // Border after Jam
-            doc.moveTo(580, startY - 10).lineTo(580, startY + 10).stroke(); // Right border
+            doc.moveTo(50, startY - 10).lineTo(50, startY + 10).stroke();   
+            doc.moveTo(120, startY - 10).lineTo(120, startY + 10).stroke(); 
+            doc.moveTo(300, startY - 10).lineTo(300, startY + 10).stroke(); 
+            doc.moveTo(400, startY - 10).lineTo(400, startY + 10).stroke(); 
+            doc.moveTo(580, startY - 10).lineTo(580, startY + 10).stroke(); 
         
-            // Draw horizontal line under each row
-            doc.moveTo(50, startY + 10).lineTo(580, startY + 10).stroke(); // Horizontal line for each row
+            doc.moveTo(50, startY + 10).lineTo(580, startY + 10).stroke(); 
         });
 
         doc.end();
@@ -140,26 +126,22 @@ router.get('/download/csv', async (req, res) => {
     const { month } = req.query;
 
     try {
-        // Fetch data from Supabase
         const rows = await getJadwalByMonth(month);
 
         if (rows.length === 0) {
             return res.status(404).json({ error: 'No data found for the selected month.' });
         }
 
-        // Manually build CSV content in-memory
-        let csvContent = 'Nama Kegiatan,Tanggal Mulai,Tanggal Selesai,Jam Mulai,Jam Selesai\n'; // CSV header
+        let csvContent = 'Nama Kegiatan,Tanggal Mulai,Tanggal Selesai,Jam Mulai,Jam Selesai\n'; 
 
         rows.forEach(row => {
             csvContent += `${row.nama_kegiatan},${row.tanggal_mulai},${row.tanggal_selesai},${row.jam_mulai},${row.jam_selesai}\n`;
         });
 
-        // Set response headers for CSV download
         const fileName = `laporan_kegiatan_${month}.csv`;
         res.setHeader('Content-disposition', `attachment; filename=${fileName}`);
         res.setHeader('Content-Type', 'text/csv');
 
-        // Send the CSV content as response
         res.send(csvContent);
     } catch (error) {
         console.error('CSV generation error:', error.message);
@@ -168,3 +150,5 @@ router.get('/download/csv', async (req, res) => {
 });
 
 module.exports = router;
+
+

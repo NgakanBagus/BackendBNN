@@ -3,8 +3,8 @@ const router = express.Router();
 const { createClient } = require('@supabase/supabase-js');
 
 // Supabase configuration
-const SUPABASE_URL = 'https://nbcnhzkctgrnojhhbvqo.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5iY25oemtjdGdybm9qaGhidnFvIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTcyNjAyMjE1MCwiZXhwIjoyMDQxNTk4MTUwfQ.l17K7F3hOq8dnZGSOFNVHnRc95uZEyMoNS8mH8HOxB8';
+const SUPABASE_URL = 'https://okkqbnojvrlckxkqvglk.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9ra3Fibm9qdnJsY2t4a3F2Z2xrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc3MTI4NjIsImV4cCI6MjA2MzI4ODg2Mn0.KVDPYqROU7xgM8tNYckyxuq_8xj5clPkLuh12DXM4Bw';
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // Mendapatkan semua pengumuman

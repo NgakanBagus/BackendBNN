@@ -1,28 +1,25 @@
 const { createClient } = require('@supabase/supabase-js');
 
-// Supabase credentials
-const supabaseUrl = 'https://nbcnhzkctgrnojhhbvqo.supabase.co'; // replace with your actual URL
-const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5iY25oemtjdGdybm9qaGhidnFvIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTcyNjAyMjE1MCwiZXhwIjoyMDQxNTk4MTUwfQ.l17K7F3hOq8dnZGSOFNVHnRc95uZEyMoNS8mH8HOxB8'; // replace with your actual public key
+const supabaseUrl = 'https://okkqbnojvrlckxkqvglk.supabase.co'; 
+const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9ra3Fibm9qdnJsY2t4a3F2Z2xrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc3MTI4NjIsImV4cCI6MjA2MzI4ODg2Mn0.KVDPYqROU7xgM8tNYckyxuq_8xj5clPkLuh12DXM4Bw';
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 const bcrypt = require('bcryptjs');
 
-// Insert initial admin and user into Supabase
 async function insertInitialData() {
     const initialAdmins = [{ username: 'admin1', password: 'admin1234' }];
     const initialUsers = [{ username: 'user1', password: 'user1234' }];
 
-    // Insert Admins
     for (const admin of initialAdmins) {
         const { data, error } = await supabase
             .from('admins')
             .select('*')
             .eq('username', admin.username)
-            .limit(1) // Limit to avoid multiple rows
-            .single(); // Expect a single row
+            .limit(1) 
+            .single(); 
 
         if (!data && error?.code === 'PGRST116') {
-            // 'PGRST116' is the code for "No rows found"
+        
             const hashedPassword = await bcrypt.hash(admin.password, 10);
             const { error: insertError } = await supabase
                 .from('admins')
@@ -40,14 +37,13 @@ async function insertInitialData() {
         }
     }
 
-    // Insert Users
     for (const user of initialUsers) {
         const { data, error } = await supabase
             .from('users')
             .select('*')
             .eq('username', user.username)
-            .limit(1) // Limit to avoid multiple rows
-            .single(); // Expect a single row
+            .limit(1) 
+            .single(); 
 
         if (!data && error?.code === 'PGRST116') {
             const hashedPassword = await bcrypt.hash(user.password, 10);
@@ -68,5 +64,4 @@ async function insertInitialData() {
     }
 }
 
-// Call the function to insert data
 insertInitialData();
