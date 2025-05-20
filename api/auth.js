@@ -7,7 +7,7 @@ const router = express.Router();
 const SECRET_KEY = 'bnn1234';
 
 // Supabase credentials
-const supabaseUrl = 'https://nbcnhzkctgrnojhhbvqo.supabase.co'; // replace with your actual URL
+const supabaseUrl = 'https://okkqbnojvrlckxkqvglk.supabase.co'; // replace with your actual URL
 const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9ra3Fibm9qdnJsY2t4a3F2Z2xrIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0NzcxMjg2MiwiZXhwIjoyMDYzMjg4ODYyfQ.aFClYNB48sdDekmlZ8QCW1mS2IUxQj0NeR9i2R3Ftfk';
 const supabase = createClient(supabaseUrl, supabaseKey);
 
