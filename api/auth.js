@@ -9,6 +9,8 @@ const SECRET_KEY = 'bnn1234';
 // Supabase credentials
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_KEY;
+console.log('SUPABASE_URL:', supabaseUrl);
+console.log('SUPABASE_KEY:', supabaseKey ? '✅ Loaded' : '❌ MISSING!');
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 // Login route
