@@ -40,7 +40,7 @@ router.post('/login', async (req, res) => {
       .from('users')
       .select('*')
       .eq('username', username)
-      .limit(1);
+      .single();
 
     if (userError && userError.message !== 'No rows found') {
       console.error("User Query Error:", userError.message); 
