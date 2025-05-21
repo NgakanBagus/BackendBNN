@@ -7,8 +7,8 @@ const { createClient } = require('@supabase/supabase-js');
 const path = require('path');
 
 // Supabase credentials
-const SUPABASE_URL = 'https://okkqbnojvrlckxkqvglk.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9ra3Fibm9qdnJsY2t4a3F2Z2xrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc3MTI4NjIsImV4cCI6MjA2MzI4ODg2Mn0.KVDPYqROU7xgM8tNYckyxuq_8xj5clPkLuh12DXM4Bw';
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_KEY = process.env.SUPABASE_KEY;
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 async function getJadwalByMonth(month) {

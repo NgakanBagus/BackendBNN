@@ -7,8 +7,8 @@ const router = express.Router();
 const SECRET_KEY = 'bnn1234';
 
 // Supabase credentials
-const supabaseUrl = 'https://okkqbnojvrlckxkqvglk.supabase.co'; // replace with your actual URL
-const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9ra3Fibm9qdnJsY2t4a3F2Z2xrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc3MTI4NjIsImV4cCI6MjA2MzI4ODg2Mn0.KVDPYqROU7xgM8tNYckyxuq_8xj5clPkLuh12DXM4Bw';
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_KEY;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 // Login route
