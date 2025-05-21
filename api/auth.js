@@ -7,19 +7,8 @@ const router = express.Router();
 const SECRET_KEY = 'bnn1234';
 
 // Supabase credentials
-const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseKey = process.env.SUPABASE_KEY;
-
-// Tambahkan log validasi
-console.log('SUPABASE_URL:', supabaseUrl || '❌ MISSING!');
-console.log('SUPABASE_KEY:', supabaseKey ? '✅ Loaded' : '❌ MISSING!');
-
-// Validasi sebelum createClient
-if (!supabaseUrl || !supabaseKey) {
-  console.error('❌ Missing Supabase credentials. Please check your .env file.');
-  process.exit(1); // Stop server jika Supabase tidak tersedia
-}
-
+const supabaseUrl = process.env.SUPABASE_URL
+const supabaseKey = process.env.SUPABASE_KEY
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 // Login route
@@ -32,15 +21,15 @@ router.post('/login', async (req, res) => {
       .from('admins')
       .select('*')
       .eq('username', username)
-      .limit(1);
+      .limit(1); // This now returns an array
 
     if (adminError && adminError.message !== 'No rows found') {
-      console.error("Admin Query Error:", adminError.message);
+      console.error("Admin Query Error:", adminError.message); // Log the error
       return res.status(500).json({ error: adminError.message });
     }
 
     if (admins && admins.length > 0) {
-      const admin = admins[0];
+      const admin = admins[0]; // Take the first result from the array
       const isPasswordMatch = await bcrypt.compare(password, admin.password);
       if (isPasswordMatch) {
         const token = jwt.sign({ id: admin.id, role: 'admin' }, SECRET_KEY, { expiresIn: '1h' });
@@ -57,7 +46,7 @@ router.post('/login', async (req, res) => {
       .single();
 
     if (userError && userError.message !== 'No rows found') {
-      console.error("User Query Error:", userError.message);
+      console.error("User Query Error:", userError.message); // Log the error
       return res.status(500).json({ error: userError.message });
     }
 
