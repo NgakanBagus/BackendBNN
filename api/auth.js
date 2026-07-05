@@ -9,6 +9,10 @@ const SECRET_KEY = 'bnn1234';
 // Supabase credentials
 const supabaseUrl = process.env.SUPABASE_URL
 const supabaseKey = process.env.SUPABASE_KEY
+
+console.log("SUPABASE_URL =", supabaseUrl);
+console.log("SUPABASE_KEY exists =", !!supabaseKey);
+
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 // Login route
@@ -23,9 +27,9 @@ router.post('/login', async (req, res) => {
       .eq('username', username)
       .limit(1); // This now returns an array
 
-    if (adminError && adminError.message !== 'No rows found') {
-      console.error("Admin Query Error:", adminError.message); // Log the error
-      return res.status(500).json({ error: adminError.message });
+    if (adminError) {
+      console.error("Admin Query Error:", adminError);
+      return res.status(500).json(adminError);
     }
 
     if (admins && admins.length > 0) {
